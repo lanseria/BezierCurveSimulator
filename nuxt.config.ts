@@ -11,9 +11,7 @@ export default defineNuxtConfig({
     '@nuxt/eslint',
   ],
 
-  devtools: {
-    enabled: true,
-  },
+  ssr: false,
 
   app: {
     head: {
