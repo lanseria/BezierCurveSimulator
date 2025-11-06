@@ -1,18 +1,25 @@
 <script lang="js" setup>
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { chartConfig } from '~/constants' // 导入公共配置
 import { useCurveStore } from '~/stores/curve'
 import { getHeightAtTime } from '~/utils/bezier'
 
-// --- 逆向坐标转换 ---
-const svgWidth = 1000; const svgHeight = 600; const padding = 60
+// --- 从公共配置中获取配置项 ---
+const { svgWidth, svgHeight, padding } = chartConfig
+
 const curveStore = useCurveStore()
 const { points } = storeToRefs(curveStore)
 const yMin = 0
 const yMax = Math.max(...points.value.map(p => p.y), 27000 * 1000)
 
-const unscaleX = svgX => ((svgX - padding) / (svgWidth - 2 * padding)) * (curveStore.xMax - curveStore.xMin) + curveStore.xMin
-const unscaleY = svgY => ((svgHeight - padding - svgY) / (svgHeight - 2 * padding)) * (yMax - yMin) + yMin
+// 可绘制区域的宽度和高度
+const drawableWidth = svgWidth - padding.left - padding.right
+const drawableHeight = svgHeight - padding.top - padding.bottom
+
+// --- 逆向坐标转换 (已更新) ---
+const unscaleX = svgX => (((svgX - padding.left) / drawableWidth) * (curveStore.xMax - curveStore.xMin)) + curveStore.xMin
+const unscaleY = svgY => (((svgHeight - padding.bottom - svgY) / drawableHeight) * (yMax - yMin)) + yMin
 
 // --- 播放器状态 ---
 const currentTime = ref(curveStore.xMin)

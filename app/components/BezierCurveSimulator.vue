@@ -1,16 +1,15 @@
 <script lang="js" setup>
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { scaleX, scaleY, useCurveStore } from '~/stores/curve' // 导入 store 和转换函数
+import { chartConfig } from '~/constants' // 导入公共配置
+import { scaleX, scaleY, useCurveStore } from '~/stores/curve'
 
 // --- 使用 Pinia Store ---
 const curveStore = useCurveStore()
-const { points, controlPoints } = storeToRefs(curveStore) // 保持响应性
+const { points, controlPoints } = storeToRefs(curveStore)
 
-// --- 配置项 (现在可以从 store 或外部文件导入) ---
-const svgWidth = 1000
-const svgHeight = 600
-const padding = 60
+// --- 从公共配置中获取配置项 ---
+const { svgWidth, svgHeight, padding } = chartConfig
 
 // --- 坐标轴刻度 ---
 const xTicks = [-300, -200, -100, 0, 100, 200, 300, 400, 500]
@@ -54,7 +53,6 @@ function startDrag(index, event) {
 function drag(event) {
   if (draggingIndex.value !== null) {
     const pos = getMousePosition(event)
-    // 更新 Store 中的数据
     curveStore.updateControlPoint(draggingIndex.value, pos)
   }
 }
@@ -85,15 +83,15 @@ onUnmounted(() => {
     <svg ref="svgRef" :viewBox="`0 0 ${svgWidth} ${svgHeight}`" class="rounded-lg bg-gray-800 max-w-7xl w-full">
       <g class="text-gray-500">
         <!-- X 轴 -->
-        <line :x1="padding" :y1="svgHeight - padding" :x2="svgWidth - padding" :y2="svgHeight - padding" stroke="currentColor" />
+        <line :x1="padding.left" :y1="svgHeight - padding.bottom" :x2="svgWidth - padding.right" :y2="svgHeight - padding.bottom" stroke="currentColor" />
         <!-- Y 轴 -->
-        <line :x1="padding" :y1="padding" :x2="padding" :y2="svgHeight - padding" stroke="currentColor" />
+        <line :x1="padding.left" :y1="padding.top" :x2="padding.left" :y2="svgHeight - padding.bottom" stroke="currentColor" />
       </g>
       <g class="text-xs text-gray-400">
-        <g v-for="x in xTicks" :key="`x-${x}`" :transform="`translate(${scaleX(x)}, ${svgHeight - padding})`">
+        <g v-for="x in xTicks" :key="`x-${x}`" :transform="`translate(${scaleX(x)}, ${svgHeight - padding.bottom})`">
           <line y2="5" stroke="currentColor" /><text y="20" text-anchor="middle" fill="currentColor">{{ x }}s</text>
         </g>
-        <g v-for="y in yTicks" :key="`y-${y}`" :transform="`translate(${padding}, ${scaleY(y)})`">
+        <g v-for="y in yTicks" :key="`y-${y}`" :transform="`translate(${padding.left}, ${scaleY(y)})`">
           <line x2="-5" stroke="currentColor" /><text x="-10" dy="0.32em" text-anchor="end" fill="currentColor">{{ y / 1000 }}k km</text>
         </g>
       </g>
@@ -104,7 +102,18 @@ onUnmounted(() => {
           <line :x1="scaleX(points[index + 1].x)" :y1="scaleY(points[index + 1].y)" :x2="controlPoints[index * 2 + 1].x" :y2="controlPoints[index * 2 + 1].y" />
         </template>
       </g>
-      <g><circle v-for="(point, index) in points" :key="`point-${index}`" :cx="scaleX(point.x)" :cy="scaleY(point.y)" r="5" fill="#c2410c" class="cursor-not-allowed" /></g>
+      <g v-for="(point, index) in points" :key="`point-group-${index}`">
+        <circle :cx="scaleX(point.x)" :cy="scaleY(point.y)" r="4" fill="#c2410c" class="cursor-not-allowed" />
+        <text
+          text-anchor="end"
+          :x="scaleX(point.x) - 2"
+          :y="scaleY(point.y) - 8"
+          fill="#cbd5e1"
+          class="text-xs pointer-events-none select-none"
+        >
+          {{ point.name }}
+        </text>
+      </g>
       <g><circle v-for="(cp, index) in controlPoints" :key="`cp-${index}`" :cx="cp.x" :cy="cp.y" r="6" fill="#3b82f6" class="cursor-move" @mousedown="startDrag(index, $event)" /></g>
     </svg>
   </div>

@@ -1,22 +1,20 @@
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
-
-// --- 这些配置项和函数需要在多个组件中共享 ---
+import { chartConfig } from '~/constants' // 导入公共配置
 
 // SVG 和坐标系配置
-const svgWidth = 1000
-const svgHeight = 600
-const padding = 60
+const { svgWidth, svgHeight, padding } = chartConfig
 
-// 初始数据点 (原始数据)
+// 初始数据点
 const initialPoints = [
-  { x: -300, y: 0 },
-  { x: 0, y: 0 },
-  { x: 72, y: 1250 * 1000 },
-  { x: 145, y: 7500 * 1000 },
-  { x: 195, y: 9500 * 1000 },
-  { x: 380, y: 22000 * 1000 },
-  { x: 490, y: 26000 * 1000 },
+  { x: -300, y: 0, name: 'ENGINE CHILL' },
+  { x: 0, y: 0, name: 'LIFTOFF' },
+  { x: 72, y: 1250 * 1000, name: 'MAX-Q' },
+  { x: 145, y: 7500 * 1000, name: 'STAGE SEP' },
+  { x: 195, y: 9500 * 1000, name: 'FAIRING' },
+  { x: 380, y: 22000 * 1000, name: 'ENTRY BURN' },
+  { x: 490, y: 26000 * 1000, name: 'LANDING BURN' },
+  { x: 530, y: 27600 * 1000, name: 'SECO-1 ' },
 ]
 
 // 计算坐标轴范围
@@ -25,9 +23,13 @@ const xMax = Math.max(...initialPoints.map(p => p.x), 500)
 const yMin = 0
 const yMax = Math.max(...initialPoints.map(p => p.y), 27000 * 1000)
 
-// 坐标转换函数
-export const scaleX = val => padding + ((val - xMin) / (xMax - xMin)) * (svgWidth - 2 * padding)
-export const scaleY = val => (svgHeight - padding) - ((val - yMin) / (yMax - yMin)) * (svgHeight - 2 * padding)
+// 可绘制区域的宽度和高度
+const drawableWidth = svgWidth - padding.left - padding.right
+const drawableHeight = svgHeight - padding.top - padding.bottom
+
+// 坐标转换函数 (已更新)
+export const scaleX = val => padding.left + ((val - xMin) / (xMax - xMin)) * drawableWidth
+export const scaleY = val => (svgHeight - padding.bottom) - ((val - yMin) / (yMax - yMin)) * drawableHeight
 
 export const useCurveStore = defineStore('curve', () => {
   // --- State ---
