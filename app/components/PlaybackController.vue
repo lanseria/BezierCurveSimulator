@@ -1,13 +1,13 @@
 <script lang="js" setup>
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
-import { scaleX, scaleY, useCurveStore } from '~/stores/curve'
+import { useCurveStore } from '~/stores/curve'
 import { getHeightAtTime } from '~/utils/bezier'
 
 // --- 逆向坐标转换 ---
 const svgWidth = 1000; const svgHeight = 600; const padding = 60
 const curveStore = useCurveStore()
-const { points, xMax } = storeToRefs(curveStore)
+const { points } = storeToRefs(curveStore)
 const yMin = 0
 const yMax = Math.max(...points.value.map(p => p.y), 27000 * 1000)
 
@@ -103,8 +103,8 @@ watch(currentTime, (newVal, oldVal) => {
       <input
         v-model.number="currentTime"
         type="range"
-        :min="xMin"
-        :max="xMax"
+        :min="curveStore.xMin"
+        :max="curveStore.xMax"
         step="0.1"
         class="appearance-none rounded-lg bg-gray-600 h-2 w-full cursor-pointer"
       >

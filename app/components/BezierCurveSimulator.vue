@@ -12,7 +12,7 @@ const svgWidth = 1000
 const svgHeight = 600
 const padding = 60
 
-// --- 坐标轴刻度 (可以保持不变) ---
+// --- 坐标轴刻度 ---
 const xTicks = [-300, -200, -100, 0, 100, 200, 300, 400, 500]
 const yTicks = [0, 5000000, 10000000, 15000000, 20000000, 25000000]
 
@@ -35,7 +35,6 @@ const svgRef = ref(null)
 const draggingIndex = ref(null)
 
 function getMousePosition(event) {
-  // ... (此函数不变) ...
   if (!svgRef.value)
     return { x: 0, y: 0 }
   const CTM = svgRef.value.getScreenCTM()
@@ -84,7 +83,6 @@ onUnmounted(() => {
       拖拽蓝色控制点以调整曲线
     </p>
     <svg ref="svgRef" :viewBox="`0 0 ${svgWidth} ${svgHeight}`" class="rounded-lg bg-gray-800 max-w-7xl w-full">
-      <!-- ... SVG 内容基本不变 ... -->
       <g class="text-gray-500">
         <!-- X 轴 -->
         <line :x1="padding" :y1="svgHeight - padding" :x2="svgWidth - padding" :y2="svgHeight - padding" stroke="currentColor" />
