@@ -4,7 +4,6 @@
   "packageManager": "pnpm@10.19.0",
   "scripts": {
     "build": "nuxt build",
-    "dev:pwa": "VITE_PLUGIN_PWA=true nuxt dev",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "prepare": "nuxt prepare",
@@ -24,7 +23,6 @@
     "@pinia/nuxt": "catalog:build",
     "@unocss/eslint-config": "catalog:build",
     "@unocss/nuxt": "catalog:build",
-    "@vite-pwa/nuxt": "catalog:build",
     "@vueuse/core": "catalog:frontend",
     "@vueuse/nuxt": "catalog:build",
     "eslint": "catalog:dev",
