@@ -201,7 +201,7 @@ input[type='range']::-webkit-slider-thumb {
   background: #4f46e5;
   cursor: pointer;
   border-radius: 50%;
-  margin-top: -8px; /* 垂直居中 */
+  margin-top: -2px; /* 垂直居中 */
 }
 input[type='range']::-moz-range-thumb {
   width: 20px;

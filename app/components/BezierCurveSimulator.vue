@@ -77,8 +77,8 @@ onUnmounted(() => {
     <h1 class="text-3xl font-bold mb-4">
       曲线编辑器
     </h1>
-    <p class="text-gray-400 mb-8">
-      拖拽蓝色控制点以调整曲线
+    <p class="text-gray-400 mb-2">
+      拖拽蓝色控制点以调整曲线，双击可复位
     </p>
     <svg ref="svgRef" :viewBox="`0 0 ${svgWidth} ${svgHeight}`" class="rounded-lg bg-gray-800 max-w-7xl w-full">
       <g class="text-gray-500">
@@ -114,7 +114,21 @@ onUnmounted(() => {
           {{ point.name }}
         </text>
       </g>
-      <g><circle v-for="(cp, index) in controlPoints" :key="`cp-${index}`" :cx="cp.x" :cy="cp.y" r="6" fill="#3b82f6" class="cursor-move" @mousedown="startDrag(index, $event)" /></g>
+      <g>
+        <circle
+          v-for="(cp, index) in controlPoints" :key="`cp-${index}`"
+          :cx="cp.x" :cy="cp.y" r="6" fill="#3b82f6"
+          class="cursor-move"
+          @mousedown="startDrag(index, $event)"
+          @dblclick="curveStore.resetControlPoint(index)"
+        />
+      </g>
     </svg>
+    <button
+      class="text-sm font-semibold mt-6 px-4 py-2 rounded-md bg-indigo-600 transition-colors hover:bg-indigo-500"
+      @click="curveStore.smoothCurve()"
+    >
+      一键平滑曲线
+    </button>
   </div>
 </template>

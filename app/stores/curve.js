@@ -64,8 +64,64 @@ export const useCurveStore = defineStore('curve', () => {
     }
   }
 
+  /**
+   * 使用 Catmull-Rom 到贝塞尔的转换算法来平滑整条曲线
+   */
+  function smoothCurve() {
+    if (points.length < 2)
+      return
+
+    const newControlPoints = []
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = (i === 0) ? points[i] : points[i - 1]
+      const p1 = points[i]
+      const p2 = points[i + 1]
+      const p3 = (i + 2 > points.length - 1) ? points[i + 1] : points[i + 2]
+
+      // Catmull-Rom to Bezier conversion formula
+      const cp1_x = p1.x + (p2.x - p0.x) / 6
+      const cp1_y = p1.y + (p2.y - p0.y) / 6
+      const cp2_x = p2.x - (p3.x - p1.x) / 6
+      const cp2_y = p2.y - (p3.y - p1.y) / 6
+
+      newControlPoints.push({ x: scaleX(cp1_x), y: scaleY(cp1_y) })
+      newControlPoints.push({ x: scaleX(cp2_x), y: scaleY(cp2_y) })
+    }
+    // 原子性地更新数组以保证响应性
+    controlPoints.splice(0, controlPoints.length, ...newControlPoints)
+  }
+
+  /**
+   * 将指定索引的控制点重置为其初始默认位置
+   * @param {number} index - 控制点的索引
+   */
+  function resetControlPoint(index) {
+    if (controlPoints[index] === undefined)
+      return
+
+    // 1. 确定这个控制点属于哪个线段
+    const segmentIndex = Math.floor(index / 2)
+    const p1 = points[segmentIndex]
+    const p2 = points[segmentIndex + 1]
+
+    if (!p1 || !p2)
+      return
+
+    // 2. 确定是线段中的第一个还是第二个控制点
+    const isFirstInPair = index % 2 === 0
+    const factor = isFirstInPair ? 0.25 : 0.75
+
+    // 3. 计算初始位置（与 initializeControlPoints 中的逻辑相同）
+    const newX = scaleX(p1.x + (p2.x - p1.x) * factor)
+    const newY = scaleY(p1.y + (p2.y - p1.y) * factor)
+
+    // 4. 更新该控制点的位置
+    controlPoints[index].x = newX
+    controlPoints[index].y = newY
+  }
+
   // 初始化
   initializeControlPoints()
 
-  return { points, controlPoints, updateControlPoint, xMin, xMax }
+  return { points, controlPoints, updateControlPoint, smoothCurve, resetControlPoint, xMin, xMax }
 })
