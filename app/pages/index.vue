@@ -4,6 +4,6 @@
 <template>
   <div class="grid grid-cols-2 h-screen w-screen">
     <BezierCurveSimulator />
-    <PlaybackController />
+    <PlaybackChart />
   </div>
 </template>
