@@ -161,11 +161,9 @@ const yTicks = [0, 5000000, 10000000, 15000000, 20000000, 25000000]
 
         <!-- 坐标轴上的数值标签 -->
         <g :transform="`translate(${indicatorPosition.x}, ${svgHeight - padding.bottom})`">
-          <rect x="-35" y="-22" width="20" height="20" rx="4" fill="#10b981" />
-          <text text-anchor="middle" fill="white" font-weight="bold" font-size="2">{{ currentTime.toFixed(1) }}s</text>
+          <text text-anchor="start" fill="white" font-weight="bold" font-size="4">{{ currentTime.toFixed(1) }}s</text>
         </g>
         <g :transform="`translate(${padding.left}, ${indicatorPosition.y})`">
-          <rect x="-80" y="-10" width="20" height="20" rx="4" fill="#10b981" />
           <text x="-5" text-anchor="middle" dy="0.32em" fill="white" font-weight="bold" font-size="4">{{ (currentHeight / 1000).toFixed(1) }}km</text>
         </g>
       </g>
