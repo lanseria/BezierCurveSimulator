@@ -1,4 +1,4 @@
-<script lang="js" setup>
+<script lang="ts" setup>
 import { storeToRefs } from 'pinia'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { chartConfig } from '~/constants'
@@ -15,13 +15,13 @@ const yMin = 0
 const yMax = Math.max(...points.value.map(p => p.y), 27000 * 1000)
 const drawableWidth = svgWidth - padding.left - padding.right
 const drawableHeight = svgHeight - padding.top - padding.bottom
-const unscaleX = svgX => (((svgX - padding.left) / drawableWidth) * (curveStore.xMax - curveStore.xMin)) + curveStore.xMin
-const unscaleY = svgY => (((svgHeight - padding.bottom - svgY) / drawableHeight) * (yMax - yMin)) + yMin
+const unscaleX = (svgX: number): number => (((svgX - padding.left) / drawableWidth) * (curveStore.xMax - curveStore.xMin)) + curveStore.xMin
+const unscaleY = (svgY: number): number => (((svgHeight - padding.bottom - svgY) / drawableHeight) * (yMax - yMin)) + yMin
 
 // --- 播放器状态 ---
 const currentTime = ref(curveStore.xMin)
 const isPlaying = ref(false)
-let animationFrameId = null
+let animationFrameId: number | null = null
 
 // --- 计算属性 ---
 
@@ -48,18 +48,19 @@ const indicatorPosition = computed(() => ({
 const pathData = computed(() => {
   if (points.value.length === 0)
     return ''
-  let path = `M ${scaleX(points.value[0].x)} ${scaleY(points.value[0].y)}`
+  const firstPoint = points.value[0]!
+  let path = `M ${scaleX(firstPoint.x)} ${scaleY(firstPoint.y)}`
   for (let i = 0; i < points.value.length - 1; i++) {
-    const cp1 = svgControlPoints.value[i * 2]
-    const cp2 = svgControlPoints.value[i * 2 + 1]
-    const p2 = points.value[i + 1]
+    const cp1 = svgControlPoints.value[i * 2]!
+    const cp2 = svgControlPoints.value[i * 2 + 1]!
+    const p2 = points.value[i + 1]!
     path += ` C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${scaleX(p2.x)},${scaleY(p2.y)}`
   }
   return path
 })
 
 // --- 播放器控制 ---
-function playLoop() {
+function playLoop(): void {
   if (!isPlaying.value)
     return
   currentTime.value += (curveStore.xMax - curveStore.xMin) / 200 // 播放速度
@@ -67,10 +68,12 @@ function playLoop() {
     currentTime.value = curveStore.xMax
     isPlaying.value = false
   }
-  animationFrameId = requestAnimationFrame(playLoop)
+  if (animationFrameId !== null) {
+    animationFrameId = requestAnimationFrame(playLoop)
+  }
 }
 
-function togglePlay() {
+function togglePlay(): void {
   isPlaying.value = !isPlaying.value
   if (isPlaying.value) {
     if (currentTime.value >= curveStore.xMax) {
@@ -79,13 +82,19 @@ function togglePlay() {
     playLoop()
   }
   else {
-    cancelAnimationFrame(animationFrameId)
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId)
+      animationFrameId = null
+    }
   }
 }
 
-function reset() {
+function reset(): void {
   isPlaying.value = false
-  cancelAnimationFrame(animationFrameId)
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
+  }
   currentTime.value = curveStore.xMin
 }
 
@@ -94,18 +103,23 @@ watch(currentTime, (newVal, oldVal) => {
   const step = (curveStore.xMax - curveStore.xMin) / 200
   if (Math.abs(newVal - oldVal) > step * 1.1 && isPlaying.value) {
     isPlaying.value = false
-    cancelAnimationFrame(animationFrameId)
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId)
+      animationFrameId = null
+    }
   }
 })
 
 // 清理副作用
 onUnmounted(() => {
-  cancelAnimationFrame(animationFrameId)
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId)
+  }
 })
 
 // --- 坐标轴刻度 ---
-const xTicks = [-300, -200, -100, 0, 100, 200, 300, 400, 500]
-const yTicks = [0, 5000000, 10000000, 15000000, 20000000, 25000000]
+const xTicks: number[] = [-300, -200, -100, 0, 100, 200, 300, 400, 500]
+const yTicks: number[] = [0, 5000000, 10000000, 15000000, 20000000, 25000000]
 </script>
 
 <template>

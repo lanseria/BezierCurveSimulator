@@ -1,5 +1,17 @@
+// 坐标点接口定义
+interface Point {
+  x: number
+  y: number
+}
+
+// 控制点接口定义
+interface ControlPoint {
+  x: number
+  y: number
+}
+
 // 三次贝塞尔曲线的参数方程
-function cubicBezier(t, p0, p1, p2, p3) {
+function cubicBezier(t: number, p0: Point, p1: Point, p2: Point, p3: Point): Point {
   const cX = 3 * (p1.x - p0.x)
   const bX = 3 * (p2.x - p1.x) - cX
   const aX = p3.x - p0.x - cX - bX
@@ -15,7 +27,7 @@ function cubicBezier(t, p0, p1, p2, p3) {
 }
 
 // 使用二分查找根据 x (时间) 找到贝塞尔曲线上的参数 t
-function findTforX(x, p0, p1, p2, p3) {
+function findTforX(x: number, p0: Point, p1: Point, p2: Point, p3: Point): number {
   let tLow = 0
   let tHigh = 1
   let t = 0.5
@@ -40,16 +52,18 @@ function findTforX(x, p0, p1, p2, p3) {
 
 /**
  * 根据给定的时间，从整条复合贝塞尔曲线中计算出对应的高度
- * @param {number} time - 输入的时间 (x 坐标)
- * @param {Array} points - 原始数据点 (非 SVG 坐标)
- * @param {Array} controlPoints - 控制点 (非 SVG 坐标)
- * @returns {number} - 计算出的高度 (y 坐标)
+ * @param time - 输入的时间 (x 坐标)
+ * @param points - 原始数据点 (非 SVG 坐标)
+ * @param controlPoints - 控制点 (非 SVG 坐标)
+ * @returns 计算出的高度 (y 坐标)
  */
-export function getHeightAtTime(time, points, controlPoints) {
+export function getHeightAtTime(time: number, points: Point[], controlPoints: ControlPoint[]): number {
   // 1. 找到时间所在的曲线段
   let segmentIndex = -1
   for (let i = 0; i < points.length - 1; i++) {
-    if (time >= points[i].x && time <= points[i + 1].x) {
+    const point = points[i]!
+    const nextPoint = points[i + 1]!
+    if (time >= point.x && time <= nextPoint.x) {
       segmentIndex = i
       break
     }
@@ -57,16 +71,18 @@ export function getHeightAtTime(time, points, controlPoints) {
 
   // 如果时间超出范围，返回端点的高度
   if (segmentIndex === -1) {
-    if (time < points[0].x)
-      return points[0].y
-    return points[points.length - 1].y
+    const firstPoint = points[0]!
+    const lastPoint = points[points.length - 1]!
+    if (time < firstPoint.x)
+      return firstPoint.y
+    return lastPoint.y
   }
 
   // 2. 获取该段曲线的四个定义点
-  const p0 = points[segmentIndex]
-  const p3 = points[segmentIndex + 1]
-  const p1 = controlPoints[segmentIndex * 2]
-  const p2 = controlPoints[segmentIndex * 2 + 1]
+  const p0 = points[segmentIndex]!
+  const p3 = points[segmentIndex + 1]!
+  const p1 = controlPoints[segmentIndex * 2]!
+  const p2 = controlPoints[segmentIndex * 2 + 1]!
 
   // 3. 找到对应于输入时间的参数 t
   const t = findTforX(time, p0, p1, p2, p3)

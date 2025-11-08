@@ -1,12 +1,31 @@
+// 坐标点接口定义
 import { defineStore } from 'pinia'
 import { reactive } from 'vue'
-import { chartConfig } from '~/constants' // 导入公共配置
+import { chartConfig } from '~/constants'
+
+interface Point {
+  x: number
+  y: number
+  name: string
+}
+
+// 控制点接口定义
+interface ControlPoint {
+  x: number
+  y: number
+}
+
+// 位置接口定义
+interface Position {
+  x: number
+  y: number
+} // 导入公共配置
 
 // SVG 和坐标系配置
 const { svgWidth, svgHeight, padding } = chartConfig
 
 // 初始数据点
-const initialPoints = [
+const initialPoints: Point[] = [
   { x: -300, y: 0, name: 'ENGINE CHILL' },
   { x: 0, y: 0, name: 'LIFTOFF' },
   { x: 72, y: 1250 * 1000, name: 'MAX-Q' },
@@ -28,23 +47,23 @@ const drawableWidth = svgWidth - padding.left - padding.right
 const drawableHeight = svgHeight - padding.top - padding.bottom
 
 // 坐标转换函数 (已更新)
-export const scaleX = val => padding.left + ((val - xMin) / (xMax - xMin)) * drawableWidth
-export const scaleY = val => (svgHeight - padding.bottom) - ((val - yMin) / (yMax - yMin)) * drawableHeight
+export const scaleX = (val: number): number => padding.left + ((val - xMin) / (xMax - xMin)) * drawableWidth
+export const scaleY = (val: number): number => (svgHeight - padding.bottom) - ((val - yMin) / (yMax - yMin)) * drawableHeight
 
 export const useCurveStore = defineStore('curve', () => {
   // --- State ---
   const points = reactive(initialPoints)
-  const controlPoints = reactive([])
+  const controlPoints = reactive<ControlPoint[]>([])
 
   // --- Actions ---
-  function initializeControlPoints() {
+  function initializeControlPoints(): void {
     // 确保只初始化一次
     if (controlPoints.length > 0)
       return
 
     for (let i = 0; i < points.length - 1; i++) {
-      const p1 = points[i]
-      const p2 = points[i + 1]
+      const p1 = points[i]!
+      const p2 = points[i + 1]!
       // 初始控制点大致放在两个数据点之间 (使用 SVG 坐标)
       controlPoints.push({
         x: scaleX(p1.x + (p2.x - p1.x) * 0.25),
@@ -57,7 +76,7 @@ export const useCurveStore = defineStore('curve', () => {
     }
   }
 
-  function updateControlPoint(index, position) {
+  function updateControlPoint(index: number, position: Position): void {
     if (controlPoints[index]) {
       controlPoints[index].x = position.x
       controlPoints[index].y = position.y
@@ -67,16 +86,16 @@ export const useCurveStore = defineStore('curve', () => {
   /**
    * 使用 Catmull-Rom 到贝塞尔的转换算法来平滑整条曲线
    */
-  function smoothCurve() {
+  function smoothCurve(): void {
     if (points.length < 2)
       return
 
-    const newControlPoints = []
+    const newControlPoints: ControlPoint[] = []
     for (let i = 0; i < points.length - 1; i++) {
-      const p0 = (i === 0) ? points[i] : points[i - 1]
-      const p1 = points[i]
-      const p2 = points[i + 1]
-      const p3 = (i + 2 > points.length - 1) ? points[i + 1] : points[i + 2]
+      const p0 = (i === 0) ? points[i]! : points[i - 1]!
+      const p1 = points[i]!
+      const p2 = points[i + 1]!
+      const p3 = (i + 2 > points.length - 1) ? points[i + 1]! : points[i + 2]!
 
       // Catmull-Rom to Bezier conversion formula
       const cp1_x = p1.x + (p2.x - p0.x) / 6
@@ -93,16 +112,16 @@ export const useCurveStore = defineStore('curve', () => {
 
   /**
    * 将指定索引的控制点重置为其初始默认位置
-   * @param {number} index - 控制点的索引
+   * @param index - 控制点的索引
    */
-  function resetControlPoint(index) {
+  function resetControlPoint(index: number): void {
     if (controlPoints[index] === undefined)
       return
 
     // 1. 确定这个控制点属于哪个线段
     const segmentIndex = Math.floor(index / 2)
-    const p1 = points[segmentIndex]
-    const p2 = points[segmentIndex + 1]
+    const p1 = points[segmentIndex]!
+    const p2 = points[segmentIndex + 1]!
 
     if (!p1 || !p2)
       return

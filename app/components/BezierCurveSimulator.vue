@@ -1,4 +1,4 @@
-<script lang="js" setup>
+<script lang="ts" setup>
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { chartConfig } from '~/constants' // 导入公共配置
@@ -12,31 +12,37 @@ const { points, controlPoints } = storeToRefs(curveStore)
 const { svgWidth, svgHeight, padding } = chartConfig
 
 // --- 坐标轴刻度 ---
-const xTicks = [-300, -200, -100, 0, 100, 200, 300, 400, 500]
-const yTicks = [0, 5000000, 10000000, 15000000, 20000000, 25000000]
+const xTicks: number[] = [-300, -200, -100, 0, 100, 200, 300, 400, 500]
+const yTicks: number[] = [0, 5000000, 10000000, 15000000, 20000000, 25000000]
 
 // --- 动态生成 SVG 路径 ---
 const pathData = computed(() => {
   if (points.value.length === 0)
     return ''
-  let path = `M ${scaleX(points.value[0].x)} ${scaleY(points.value[0].y)}`
+  const firstPoint = points.value[0]!
+  let path = `M ${scaleX(firstPoint.x)} ${scaleY(firstPoint.y)}`
   for (let i = 0; i < points.value.length - 1; i++) {
-    const cp1 = controlPoints.value[i * 2]
-    const cp2 = controlPoints.value[i * 2 + 1]
-    const p2 = points.value[i + 1]
+    const cp1 = controlPoints.value[i * 2]!
+    const cp2 = controlPoints.value[i * 2 + 1]!
+    const p2 = points.value[i + 1]!
     path += ` C ${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${scaleX(p2.x)},${scaleY(p2.y)}`
   }
   return path
 })
 
 // --- 拖拽逻辑 ---
-const svgRef = ref(null)
-const draggingIndex = ref(null)
+const svgRef = ref<SVGSVGElement | null>(null)
+const draggingIndex = ref<number | null>(null)
 
-function getMousePosition(event) {
+interface Position {
+  x: number
+  y: number
+}
+
+function getMousePosition(event: MouseEvent): Position {
   if (!svgRef.value)
     return { x: 0, y: 0 }
-  const CTM = svgRef.value.getScreenCTM()
+  const CTM = (svgRef.value as any).getScreenCTM()
   if (!CTM)
     return { x: 0, y: 0 }
   return {
@@ -45,19 +51,19 @@ function getMousePosition(event) {
   }
 }
 
-function startDrag(index, event) {
+function startDrag(index: number, event: MouseEvent): void {
   draggingIndex.value = index
   event.preventDefault()
 }
 
-function drag(event) {
+function drag(event: MouseEvent): void {
   if (draggingIndex.value !== null) {
     const pos = getMousePosition(event)
     curveStore.updateControlPoint(draggingIndex.value, pos)
   }
 }
 
-function stopDrag() {
+function stopDrag(): void {
   draggingIndex.value = null
 }
 
@@ -98,8 +104,8 @@ onUnmounted(() => {
       <path :d="pathData" fill="none" stroke="#4f46e5" :stroke-width="2" />
       <g stroke="#60a5fa" stroke-width="0.5" stroke-dasharray="2 2">
         <template v-for="(point, index) in points.slice(0, -1)" :key="`line-${index}`">
-          <line :x1="scaleX(point.x)" :y1="scaleY(point.y)" :x2="controlPoints[index * 2].x" :y2="controlPoints[index * 2].y" />
-          <line :x1="scaleX(points[index + 1].x)" :y1="scaleY(points[index + 1].y)" :x2="controlPoints[index * 2 + 1].x" :y2="controlPoints[index * 2 + 1].y" />
+          <line :x1="scaleX(point.x)" :y1="scaleY(point.y)" :x2="controlPoints[index * 2]?.x" :y2="controlPoints[index * 2]?.y" />
+          <line :x1="scaleX(points[index + 1]!.x)" :y1="scaleY(points[index + 1]!.y)" :x2="controlPoints[index * 2 + 1]?.x" :y2="controlPoints[index * 2 + 1]?.y" />
         </template>
       </g>
       <g v-for="(point, index) in points" :key="`point-group-${index}`">
